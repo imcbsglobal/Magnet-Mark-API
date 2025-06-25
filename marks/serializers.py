@@ -13,15 +13,6 @@ class CceEntrySerializer(serializers.ModelSerializer):
         model = CceEntry
         fields = [
             'slno',
-            'admission',
-            'class_field',
-            'division',
-            'subject',
-            'term',
-            'part',
-            'assessmentitem',
             'mark',
-            'maxmark',
-            'grade',
             'last_updated'
         ]

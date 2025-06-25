@@ -22,6 +22,7 @@ class HealthCheckView(APIView):
             "routes": {
                 "health": "/api/health/",
                 "login": "/api/login/",
+                "mark": "/api/mark-sync/"
             }
         }, status=status.HTTP_200_OK)
 

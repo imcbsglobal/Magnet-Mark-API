@@ -83,18 +83,18 @@ class MarkSyncAPIView(APIView):
             latest_updated = make_aware(latest_updated)
 
         # Apply pagination
-        paginator = LimitOffsetPagination()
-        paginated_qs = paginator.paginate_queryset(
-            queryset.order_by('last_updated'), request)
+        # paginator = LimitOffsetPagination()
+        # paginated_qs = paginator.paginate_queryset(
+        #     queryset.order_by('last_updated'), request)
 
-        serialized = CceEntrySerializer(paginated_qs, many=True)
+        serialized = CceEntrySerializer(queryset.order_by('last_updated'), many=True)
 
         # Update user's last_synced_at
         if latest_updated:
             user.last_synced_at = latest_updated
             user.save(update_fields=['last_synced_at'])
 
-        return paginator.get_paginated_response({
+        return Response({
             "status": "success",
             "user": user_id,
             "total_entries": total_count,

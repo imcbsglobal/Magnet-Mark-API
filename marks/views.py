@@ -59,7 +59,7 @@ class MarkSyncAPIView(APIView):
         user_id = request.user_id
 
         # Fetch all entries, ignore last_synced_at
-        queryset = CceEntry.objects.all().order_by('last_updated')
+        queryset = CceEntry.objects.filter(mark__gt=0).order_by('last_updated')
 
         total_count = queryset.count()
         latest_updated = queryset.aggregate(latest=Max('last_updated'))['latest']

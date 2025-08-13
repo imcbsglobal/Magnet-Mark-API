@@ -58,38 +58,19 @@ class MarkSyncAPIView(APIView):
         user = request.mark_user
         user_id = request.user_id
 
-        try:
-            user = MarkAPIUser.objects.get(user_id=user_id)
-        except MarkAPIUser.DoesNotExist:
-            return Response({"error": "Invalid user"}, status=401)
-
-        # Fetch last synced time
-        last_sync = user.last_synced_at
-
-        if last_sync and is_naive(last_sync):
-            last_sync = make_aware(last_sync)
-
-        if last_sync:
-            queryset = CceEntry.objects.filter(last_updated__gt=last_sync)
-        else:
-            queryset = CceEntry.objects.all()
+        # Fetch all entries, ignore last_synced_at
+        queryset = CceEntry.objects.all().order_by('last_updated')
 
         total_count = queryset.count()
-        latest_updated = queryset.aggregate(
-            latest=Max('last_updated'))['latest']
+        latest_updated = queryset.aggregate(latest=Max('last_updated'))['latest']
 
-        # 🛠️ Make latest_updated timezone-aware
+        # Make latest_updated timezone-aware
         if latest_updated and is_naive(latest_updated):
             latest_updated = make_aware(latest_updated)
 
-        # Apply pagination
-        # paginator = LimitOffsetPagination()
-        # paginated_qs = paginator.paginate_queryset(
-        #     queryset.order_by('last_updated'), request)
+        serialized = CceEntrySerializer(queryset, many=True)
 
-        serialized = CceEntrySerializer(queryset.order_by('last_updated'), many=True)
-
-        # Update user's last_synced_at
+        # Optional: still update last_synced_at if you want
         if latest_updated:
             user.last_synced_at = latest_updated
             user.save(update_fields=['last_synced_at'])
@@ -99,7 +80,7 @@ class MarkSyncAPIView(APIView):
             "user": user_id,
             "total_entries": total_count,
             "sync_period": {
-                "from": localtime(last_sync) if last_sync else None,
+                "from": None,  # or you can keep last_sync
                 "to": localtime(latest_updated) if latest_updated else None
             },
             "data": serialized.data
